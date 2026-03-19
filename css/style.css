@@ -766,3 +766,119 @@ body {
   .seq-eid-arabic{font-size:40px;}
   .por-arabic{font-size:34px;}
 }
+
+/* ══════════════════════════════════════
+   MOBILE PERFORMANCE OPTIMIZATIONS
+   Reduce heavy effects on small screens
+══════════════════════════════════════ */
+
+/* GPU-accelerate key animated elements */
+#envelope,
+.env-flap,
+.env-seal,
+.seq-screen,
+.replay-overlay-panel,
+.replay-content,
+.page-section,
+.lantern-el,
+.particle {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Reduce box-shadow layers on mobile */
+@media (max-width: 768px) {
+  /* Disable 3D tilt — handled in JS already */
+  #envelope { perspective: none; transform-style: flat; }
+
+  /* Simplify env-body shadow */
+  .env-body {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+
+  /* Single shadow on cards */
+  .greeting-card.main-message,
+  .personal-card,
+  .dua-card.featured {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    backdrop-filter: none;
+  }
+
+  /* Remove tap-hint rings — heavy on mobile */
+  .tap-hint::before,
+  .tap-hint::after { display: none; }
+
+  /* Simplify tap-hint */
+  .tap-hint { backdrop-filter: none; background: rgba(7,17,31,0.7); }
+
+  /* Faster, simpler transitions */
+  .page-section { transition: opacity 0.35s ease, transform 0.35s ease; }
+
+  /* Env breathe animation — lighter on mobile */
+  #envelope:not(.opening):not(.done) {
+    animation: envBreatheMobile 4s ease-in-out infinite;
+  }
+  @keyframes envBreatheMobile {
+    0%,100% { filter: drop-shadow(0 16px 32px rgba(212,168,83,0.2)) drop-shadow(0 5px 12px rgba(0,0,0,0.5)); }
+    50%     { filter: drop-shadow(0 22px 44px rgba(212,168,83,0.35)) drop-shadow(0 5px 12px rgba(0,0,0,0.5)); }
+  }
+
+  /* Disable replay background stars animation on mobile */
+  .replay-stars-bg { display: none; }
+
+  /* Simpler replay backdrop */
+  .replay-backdrop { backdrop-filter: none; }
+
+  /* Reduce seq-screen gradient cost */
+  .seq-screen { background: #07111f; }
+  .seq-screen::before { display: none; }
+
+  /* Mosque: simpler opacity */
+  .mosque-wrap { opacity: 0.08; }
+
+  /* Disable gold shimmer on mobile (handled in JS) */
+  .shimmer-sweep::after { display: none; }
+
+  /* Remove heavy nav blur on mobile */
+  .navbar { backdrop-filter: blur(12px); }
+  .nav-drawer { backdrop-filter: blur(12px); }
+
+  /* Seq content gap reduction */
+  .seq-content { gap: 16px; }
+
+  /* Remove extra env shadow stack */
+  #envelope.opening.done {
+    filter: drop-shadow(0 10px 24px rgba(212,168,83,0.15));
+  }
+}
+
+/* Extra cuts for very low-end phones */
+@media (max-width: 480px) {
+  /* Disable sealPulse animation */
+  .env-seal { animation: none !important; }
+
+  /* Simpler wax seal glow */
+  .env-seal svg { filter: drop-shadow(0 2px 8px rgba(192,37,30,0.5)); }
+
+  /* Disable card hover 3D */
+  .blessing-card:hover { transform: none; }
+
+  /* Static env shimmer */
+  .env-shimmer::before { animation: none; opacity: 0.1; left: -10%; }
+
+  /* Remove moonRock animation from brand */
+  .nav-crescent { animation: none; filter: drop-shadow(0 0 4px rgba(240,201,122,0.5)); }
+}
+
+/* ── Respect system preference for reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .particle { display: none; }
+  .lantern-el { display: none; }
+}
