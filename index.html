@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eid Mubarak 🌙 — Mohammad Saad Raza</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Aref+Ruqaa+Ink&family=Reem+Kufi+Flash&family=Reem+Kufi:wght@400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ═══ NAVBAR ═══ -->
+  <nav id="navbar" class="navbar">
+    <div class="nav-brand">
+      <div class="nav-crescent">
+        <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 3 A11 11 0 1 1 14 25 A7.5 7.5 0 1 0 14 3 Z" fill="#f0c97a"/>
+          <polygon points="19,4 19.9,6.7 22.8,6.7 20.4,8.4 21.3,11.1 19,9.4 16.7,11.1 17.6,8.4 15.2,6.7 18.1,6.7" fill="#f0c97a" opacity="0.9"/>
+        </svg>
+      </div>
+      <div class="nav-brand-text">
+        <span class="nav-title">Eid Mubarak</span>
+        <span class="nav-year">1447 AH</span>
+      </div>
+    </div>
+
+    <!-- Desktop links -->
+    <ul class="nav-links">
+      <li><a href="#home"     class="nav-link active" data-section="home">Home</a></li>
+      <li><a href="#blessings" class="nav-link locked" data-section="blessings">Blessings</a></li>
+      <li><a href="#duas"     class="nav-link locked" data-section="duas">Du'as</a></li>
+      <li><a href="#message"  class="nav-link locked" data-section="message">Message</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <button id="audio-toggle" class="nav-audio" title="Toggle Music" aria-label="Toggle music">
+        <span id="audio-icon" class="audio-off">♪</span>
+        <span class="audio-label" id="audio-label">OFF</span>
+      </button>
+      <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <div class="nav-drawer" id="nav-drawer">
+      <a href="#home"      class="drawer-link active" data-section="home">Home</a>
+      <a href="#blessings" class="drawer-link locked"  data-section="blessings">Blessings</a>
+      <a href="#duas"      class="drawer-link locked"  data-section="duas">Du'as</a>
+      <a href="#message"   class="drawer-link locked"  data-section="message">Message</a>
+    </div>
+  </nav>
+
+  <!-- ═══ NIGHT SKY CANVAS ═══ -->
+  <canvas id="sky-canvas"></canvas>
+
+  <!-- ═══ PAGE: HOME ═══ -->
+  <section id="home" class="page-section active">
+    <div class="home-inner">
+
+      <!-- Pre-open greeting -->
+      <div id="pre-open-greeting" class="home-greeting">
+        <div class="home-arabic">عِيدٌ مُبَارَكٌ</div>
+        <div class="home-english-title">Eid Mubarak</div>
+        <div class="home-sub">✦ &nbsp; A special message awaits you &nbsp; ✦</div>
+      </div>
+
+      <!-- Post-open home reveal -->
+      <div id="post-open-reveal" class="post-open-reveal" aria-hidden="true">
+        <div class="por-moon">🌙</div>
+        <div class="por-stars">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <div class="por-arabic">عِيدٌ مُبَارَكٌ</div>
+        <div class="por-english">Eid &nbsp; Mubarak</div>
+        <div class="por-divider"></div>
+        <div class="por-dua">تَقَبَّلَ اللَّهُ مِنَّا وَمِنْكُمْ</div>
+        <div class="por-dua-en">May Allah accept from us and from you</div>
+
+      </div>
+
+      <div id="envelope-container">
+        <div id="envelope" role="button" tabindex="0" aria-label="Open your Eid letter">
+
+          <!-- Wax seal -->
+          <div class="env-seal" id="wax-seal">
+            <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="waxG" cx="35%" cy="30%">
+                  <stop offset="0%"   stop-color="#f05555"/>
+                  <stop offset="50%"  stop-color="#c0251e"/>
+                  <stop offset="100%" stop-color="#7a0000"/>
+                </radialGradient>
+                <filter id="waxShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="rgba(0,0,0,0.65)"/>
+                </filter>
+              </defs>
+              <circle cx="40" cy="40" r="36" fill="url(#waxG)" filter="url(#waxShadow)"/>
+              <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,180,150,0.2)" stroke-width="1.5"/>
+              <circle cx="40" cy="40" r="27" fill="none" stroke="rgba(255,160,130,0.12)" stroke-width="1"/>
+              <path d="M40 16 A24 24 0 1 1 40 64 A16 16 0 1 0 40 16 Z" fill="rgba(255,230,170,0.95)" transform="rotate(-30 40 40)"/>
+              <polygon points="54,22 55.8,27.5 61.5,27.5 57,30.8 58.8,36.3 54,33 49.2,36.3 51,30.8 46.5,27.5 52.2,27.5" fill="rgba(255,230,170,0.95)"/>
+              <ellipse cx="28" cy="26" rx="7" ry="4" fill="rgba(255,255,255,0.12)" transform="rotate(-30 28 26)"/>
+            </svg>
+          </div>
+
+          <!-- Flap -->
+          <div class="env-flap" id="env-flap">
+            <div class="env-flap-front"></div>
+            <div class="env-flap-inner"></div>
+          </div>
+
+          <!-- Envelope body -->
+          <div class="env-body">
+            <div class="env-pattern"></div>
+            <svg class="env-lines" viewBox="0 0 420 250" preserveAspectRatio="none">
+              <line x1="0"   y1="250" x2="210" y2="100" stroke="rgba(180,130,50,0.18)" stroke-width="1"/>
+              <line x1="420" y1="250" x2="210" y2="100" stroke="rgba(180,130,50,0.18)" stroke-width="1"/>
+              <line x1="0"   y1="0"   x2="210" y2="100" stroke="rgba(180,130,50,0.14)" stroke-width="1"/>
+              <line x1="420" y1="0"   x2="210" y2="100" stroke="rgba(180,130,50,0.14)" stroke-width="1"/>
+              <rect x="8" y="8" width="404" height="234" rx="6" fill="none" stroke="rgba(180,130,50,0.15)" stroke-width="1.2"/>
+            </svg>
+            <div class="env-corner-tl">
+              <svg viewBox="0 0 40 40"><path d="M2 2 Q20 2 38 20 Q38 38 20 38" fill="none" stroke="rgba(180,130,50,0.35)" stroke-width="1.5"/><circle cx="3" cy="3" r="2.5" fill="rgba(180,130,50,0.45)"/></svg>
+            </div>
+            <div class="env-corner-br">
+              <svg viewBox="0 0 40 40"><path d="M2 2 Q20 2 38 20 Q38 38 20 38" fill="none" stroke="rgba(180,130,50,0.35)" stroke-width="1.5"/><circle cx="3" cy="3" r="2.5" fill="rgba(180,130,50,0.45)"/></svg>
+            </div>
+            <div class="env-letter" id="env-letter">
+              <div class="env-letter-lines"></div>
+              <div class="env-letter-text">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
+            </div>
+          </div>
+          <div class="env-shimmer"></div>
+        </div>
+
+        <p id="tap-hint" class="tap-hint">
+          <span class="hint-moon">🌙</span>
+          <span>Tap the seal to open</span>
+        </p>
+
+        <!-- Post-open: click envelope to replay -->
+        <p id="replay-hint" class="replay-hint" style="display:none;">
+          <span class="hint-moon">✨</span>
+          <span>Tap the envelope to read again</span>
+          <span class="hint-moon">✨</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Mosque silhouette -->
+    <div class="mosque-wrap">
+      <svg viewBox="0 0 1200 220" xmlns="http://www.w3.org/2000/svg" fill="#d4a853" class="mosque-svg">
+        <ellipse cx="600" cy="100" rx="105" ry="88"/>
+        <rect x="495" y="100" width="210" height="120"/>
+        <rect x="415" y="30" width="36" height="190"/>
+        <path d="M415 30 Q433 -5 451 30Z"/>
+        <ellipse cx="433" cy="22" rx="6" ry="8" fill="rgba(255,243,204,0.7)"/>
+        <rect x="749" y="30" width="36" height="190"/>
+        <path d="M749 30 Q767 -5 785 30Z"/>
+        <ellipse cx="767" cy="22" rx="6" ry="8" fill="rgba(255,243,204,0.7)"/>
+        <rect x="270" y="90" width="150" height="130"/>
+        <ellipse cx="345" cy="90" rx="55" ry="48"/>
+        <rect x="780" y="90" width="150" height="130"/>
+        <ellipse cx="855" cy="90" rx="55" ry="48"/>
+        <rect x="250" y="45" width="24" height="175"/>
+        <path d="M250 45 Q262 16 274 45Z"/>
+        <rect x="926" y="45" width="24" height="175"/>
+        <path d="M926 45 Q938 16 950 45Z"/>
+        <rect x="90" y="120" width="100" height="100"/>
+        <ellipse cx="140" cy="120" rx="38" ry="32"/>
+        <rect x="1010" y="120" width="100" height="100"/>
+        <ellipse cx="1060" cy="120" rx="38" ry="32"/>
+        <rect x="0" y="218" width="1200" height="3"/>
+        <path d="M600 18 A11 11 0 1 1 600 40 A7 7 0 1 0 600 18 Z" fill="rgba(255,243,204,0.95)"/>
+        <polygon points="433,5 434.5,9.5 439.5,9.5 435.5,12.3 437,16.8 433,14.2 429,16.8 430.5,12.3 426.5,9.5 431.5,9.5" fill="rgba(255,243,204,0.85)"/>
+        <polygon points="767,5 768.5,9.5 773.5,9.5 769.5,12.3 771,16.8 767,14.2 763,16.8 764.5,12.3 760.5,9.5 765.5,9.5" fill="rgba(255,243,204,0.85)"/>
+        <polygon points="262,28 263.2,31.6 267,31.6 264,33.7 265.2,37.3 262,35.2 258.8,37.3 260,33.7 257,31.6 260.8,31.6" fill="rgba(255,243,204,0.7)"/>
+        <polygon points="938,28 939.2,31.6 943,31.6 940,33.7 941.2,37.3 938,35.2 934.8,37.3 936,33.7 933,31.6 936.8,31.6" fill="rgba(255,243,204,0.7)"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ═══ PAGE: BLESSINGS ═══ -->
+  <section id="blessings" class="page-section">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-arabic">بَرَكَاتٌ</div>
+        <h2 class="section-title">Eid Blessings</h2>
+        <div class="gold-rule"><span>✦</span></div>
+      </div>
+      <div class="greeting-card main-message">
+        <div class="ornament-corner tl"></div>
+        <div class="ornament-corner tr"></div>
+        <div class="ornament-corner bl"></div>
+        <div class="ornament-corner br"></div>
+        <p class="message-text">
+          To my beloved family, dear friends, and every soul I hold close —<br>
+          near or far, wherever life has taken you in this wide world 🌍<br><br>
+          On this most joyful day of Eid, I sit with my hands raised and my heart
+          full, making a quiet, sincere du'a <em>just for you.</em><br><br>
+          <em>May Allah fill your life with so much goodness</em>
+          that your heart cannot contain it all.<br>
+          May He protect you the way only He can —
+          with <em>mercy that never runs out, and love that never fades.</em> 💙
+        </p>
+      </div>
+      <div class="blessings-grid">
+        <div class="blessing-card" data-delay="0"><div class="bc-icon">🤲</div><div class="bc-title">Du'a for You</div><p class="bc-text">May Allah grant you health so strong that you wake every morning feeling alive, grateful, and at peace.</p></div>
+        <div class="blessing-card" data-delay="100"><div class="bc-icon">💛</div><div class="bc-title">For Your Heart</div><p class="bc-text">May He remove every worry from your chest and replace it with certainty, hope, and a smile that stays.</p></div>
+        <div class="blessing-card" data-delay="200"><div class="bc-icon">🌙</div><div class="bc-title">For Your Future</div><p class="bc-text">May every door that matters open for you, and may your path always be lit by His guidance and grace.</p></div>
+        <div class="blessing-card" data-delay="300"><div class="bc-icon">🕌</div><div class="bc-title">For Your Faith</div><p class="bc-text">May your connection with Allah grow deeper with each day, and may Salah always be your comfort and refuge.</p></div>
+        <div class="blessing-card" data-delay="400"><div class="bc-icon">🌹</div><div class="bc-title">For Your Family</div><p class="bc-text">May Allah bless your home with laughter, harmony, and barakah that spills over into every corner of your life.</p></div>
+        <div class="blessing-card" data-delay="500"><div class="bc-icon">⭐</div><div class="bc-title">For Your Goals</div><p class="bc-text">May every honest effort you make be rewarded, and may Allah make easy what seems impossible.</p></div>
+      </div>
+      <div class="celebrate-wrap">
+        <button class="celebrate-btn" id="celebrate-btn" onclick="celebrate(this)" aria-label="Celebrate Eid Mubarak">
+          <span class="cbtn-icon">🌙</span>
+          <span class="cbtn-text">Send Eid Blessings</span>
+          <span class="cbtn-icon">✨</span>
+        </button>
+        <p class="celebrate-hint">Tap here to make yourself happier 🎉 — it plays a special sound just for you!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PAGE: DU'AS ═══ -->
+  <section id="duas" class="page-section">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-arabic">أَدْعِيَة</div>
+        <h2 class="section-title">Sacred Du'as</h2>
+        <div class="gold-rule"><span>✦</span></div>
+      </div>
+      <div class="dua-main">
+        <div class="dua-card featured">
+          <div class="dua-arabic-text">اللَّهُمَّ بَارِكْ لَنَا فِي أَهْلِنَا وَأَصْدِقَائِنَا</div>
+          <div class="dua-transliteration">Allāhumma bārik lanā fī ahlina wa asdiqā'ina</div>
+          <div class="dua-english-text">"O Allah, bless us in our families and our friends"</div>
+        </div>
+      </div>
+      <div class="duas-grid">
+        <div class="dua-card"><div class="dua-arabic-text">رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي</div><div class="dua-english-text">"My Lord, make me and my descendants steadfast in prayer"</div><div class="dua-source">— Surah Ibrahim 14:40</div></div>
+        <div class="dua-card"><div class="dua-arabic-text">رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً</div><div class="dua-english-text">"Our Lord, give us good in this world and good in the Hereafter"</div><div class="dua-source">— Surah Al-Baqarah 2:201</div></div>
+        <div class="dua-card"><div class="dua-arabic-text">تَقَبَّلَ اللَّهُ مِنَّا وَمِنْكُمْ</div><div class="dua-transliteration">Taqabbalallāhu minnā wa minkum</div><div class="dua-english-text">"May Allah accept from us and from you"</div><div class="dua-source">— Traditional Eid Greeting</div></div>
+      </div>
+      <div class="hadith-banner">
+        <div class="hadith-mark">ﷺ</div>
+        <p class="hadith-text">"Whoever Allah wishes good for, He gives them understanding of the religion and He inspires them with right guidance."</p>
+        <p class="hadith-source">— Prophet Muhammad ﷺ · Bukhari &amp; Muslim</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PAGE: MESSAGE ═══ -->
+  <section id="message" class="page-section">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-arabic">رِسَالَة</div>
+        <h2 class="section-title">A Personal Message</h2>
+        <div class="gold-rule"><span>✦</span></div>
+      </div>
+      <div class="personal-card">
+        <p class="personal-text">
+          No matter how far apart we are,<br>
+          know that you are in my heart and in my prayers — <em>always.</em><br><br>
+          Eid is a reminder that we are still connected —<br>
+          through the same moon, the same faith,<br>
+          and a love that distance cannot break. 🌙<br><br>
+          <em>May this Eid bring you the kind of happiness<br>
+            that makes your eyes well up with gratitude.</em>
+        </p>
+      </div>
+      <div class="sender-block">
+        <div class="sender-from">Sent with love &amp; prayers by</div>
+        <div class="sender-name">Mohammad Saad Raza</div>
+        <div class="sender-dua">تَقَبَّلَ اللَّهُ مِنَّا وَمِنْكُمْ</div>
+        <div class="sender-trans">May Allah accept from us and from you</div>
+        <div class="sender-date">Eid ul-Fitr · 1447 AH / 2026 CE</div>
+      </div>
+      <div class="final-footer">
+        <div class="footer-moon">🌙</div>
+        <div class="footer-eid">Eid Mubarak</div>
+        <div class="footer-copy">© 2026 Mohammad Saad Raza · All Rights Reserved</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ LAYERS ═══ -->
+  <div id="particles-layer"></div>
+  <div id="glow-burst"></div>
+  <div id="reveal-overlay"></div>
+
+  <!-- ═══ BISMILLAH SCREEN ═══ -->
+  <div id="screen-bismillah" class="seq-screen" style="display:none;">
+    <div class="seq-content">
+      <div class="seq-moon">☽</div>
+      <div class="seq-bismillah">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
+      <div class="seq-bismillah-en" id="bism-en">In the name of Allah, the Most Gracious, the Most Merciful</div>
+      <div class="seq-progress">
+        <div class="seq-dot" id="dot-1"></div>
+        <div class="seq-dot" id="dot-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ EID MUBARAK SCREEN ═══ -->
+  <div id="screen-eid" class="seq-screen" style="display:none;">
+    <div class="seq-content" id="eid-content">
+      <div class="seq-stars">✦ &nbsp;&nbsp; ✦ &nbsp;&nbsp; ✦</div>
+      <div class="seq-eid-arabic" id="eid-arabic">عِيدٌ مُبَارَكٌ</div>
+      <div class="seq-eid-english" id="eid-english">Eid Mubarak</div>
+      <div class="seq-dua" id="eid-dua">تَقَبَّلَ اللَّهُ مِنَّا وَمِنْكُمْ</div>
+      <div class="seq-dua-en" id="eid-dua-en">May Allah accept from us and from you</div>
+      <div class="seq-progress">
+        <div class="seq-dot done" id="dot-3"></div>
+        <div class="seq-dot" id="dot-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ REPLAY OVERLAY (click opened envelope) ═══ -->
+  <div id="replay-overlay-panel" class="replay-overlay-panel" style="display:none;" aria-hidden="true">
+    <div class="replay-backdrop" id="replay-backdrop"></div>
+
+    <button class="replay-close-btn" id="replay-close-btn" aria-label="Close">✕</button>
+
+    <div class="replay-stars-bg">
+      <span>✦</span><span>✦</span><span>✦</span><span>✦</span>
+      <span>✦</span><span>✦</span><span>✦</span><span>✦</span>
+      <span>✦</span><span>✦</span><span>✦</span><span>✦</span>
+    </div>
+
+    <div class="replay-content">
+
+      <!-- Bismillah block -->
+      <div class="replay-bism-block">
+        <div class="replay-moon-glow">☽</div>
+        <div class="replay-bism-arabic">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
+        <div class="replay-bism-en">In the name of Allah, the Most Gracious, the Most Merciful</div>
+      </div>
+
+      <!-- Ornamental divider -->
+      <div class="replay-ornament">
+        <div class="replay-orn-line"></div>
+        <div class="replay-orn-diamond">◆</div>
+        <div class="replay-orn-line"></div>
+      </div>
+
+      <!-- Eid Mubarak block -->
+      <div class="replay-eid-block">
+        <div class="replay-sparkles">✦ &nbsp;&nbsp; ✦ &nbsp;&nbsp; ✦</div>
+        <div class="replay-eid-arabic">عِيدٌ مُبَارَكٌ</div>
+        <div class="replay-eid-english">Eid &nbsp; Mubarak</div>
+        <div class="replay-eid-dua">تَقَبَّلَ اللَّهُ مِنَّا وَمِنْكُمْ</div>
+        <div class="replay-eid-dua-en">May Allah accept from us and from you</div>
+      </div>
+
+      <!-- Footer -->
+      <div class="replay-sig">
+        <div class="replay-sig-line"></div>
+        <div class="replay-sig-name">Mohammad Saad Raza</div>
+        <div class="replay-sig-date">Eid ul-Fitr · 1447 AH / 2026 CE</div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/sky.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
