@@ -3,6 +3,24 @@
    Mohammad Saad Raza · 1446 AH / 2025
 ═══════════════════════════════════════════════════ */
 
+/* ── Color rendering normalization ─────────────── */
+html {
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Force consistent color on gradient text across all browsers */
+.seq-eid-arabic,
+.replay-eid-arabic,
+.por-arabic {
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  /* Fallback color for browsers that don't support background-clip:text */
+  color: transparent;
+}
+
 /* ── Variables ─────────────────────────────────── */
 :root {
   --gold:       #d4a853;
@@ -242,9 +260,42 @@ body {
   50%    { filter:drop-shadow(0 32px 70px rgba(212,168,83,0.42)) drop-shadow(0 8px 20px rgba(0,0,0,0.6)); }
 }
 #envelope.opening { animation:none; }
-#envelope.done    { animation:none; transform:scale(0.9) translateY(4px) !important; filter:drop-shadow(0 16px 36px rgba(212,168,83,0.18)) drop-shadow(0 5px 12px rgba(0,0,0,0.4)); }
+
+/* DONE STATE — stays open like a real opened envelope, natural size */
+#envelope.done {
+  animation:none;
+  transform:translateY(0) !important;
+  filter:drop-shadow(0 18px 40px rgba(212,168,83,0.22)) drop-shadow(0 6px 16px rgba(0,0,0,0.5));
+  cursor:default;
+}
 #envelope.done-clickable { cursor:pointer; }
-#envelope.done-clickable:hover { filter:drop-shadow(0 22px 48px rgba(212,168,83,0.35)) drop-shadow(0 6px 16px rgba(0,0,0,0.5)) !important; }
+#envelope.done-clickable:hover {
+  filter:drop-shadow(0 26px 52px rgba(212,168,83,0.38)) drop-shadow(0 8px 20px rgba(0,0,0,0.55)) !important;
+  transform:translateY(-3px) !important;
+  transition:filter 0.3s ease, transform 0.3s ease !important;
+}
+
+/* Flap goes FULLY open (-180deg = flat against back, like real envelope) */
+#envelope.opening .env-flap {
+  transform: rotateX(-180deg);
+}
+/* Crease line visible at top when open */
+#envelope.done .env-body::after {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,transparent,rgba(160,120,40,0.3),transparent);
+  border-radius:14px 14px 0 0;
+}
+/* Letter stays fully extended out of envelope */
+#envelope.opening .env-letter {
+  transform:scaleY(1) translateY(-18%);
+}
+/* Seal stays invisible once opened */
+#envelope.opening .env-seal,
+#envelope.done .env-seal {
+  opacity:0 !important;
+  pointer-events:none;
+}
 
 /* Shake animation */
 @keyframes envShake {
@@ -296,9 +347,19 @@ body {
 .env-flap {
   position:absolute; top:0; left:0; right:0; height:56%;
   transform-origin:top center; transform-style:preserve-3d; z-index:5;
-  transition:transform 2.2s cubic-bezier(0.35,0,0.15,1);
+  transition:transform 2.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-#envelope.opening .env-flap { transform:rotateX(-172deg); }
+/* Shadow that appears UNDER the open flap for depth */
+.env-flap::after {
+  content:'';
+  position:absolute; top:100%; left:5%; right:5%; height:10px;
+  background:linear-gradient(to bottom, rgba(0,0,0,0.18), transparent);
+  transform-origin:top center;
+  transform:scaleY(0);
+  transition:transform 0.4s ease 2.5s;
+  pointer-events:none;
+}
+#envelope.opening .env-flap::after { transform:scaleY(1); }
 .env-flap-front { position:absolute; inset:0; background:linear-gradient(155deg,#f3e5be 0%,#ddc88a 100%); clip-path:polygon(0 0,50% 74%,100% 0); border-top:1.5px solid #c9aa62; border-left:1.5px solid #c9aa62; border-right:1.5px solid #c9aa62; }
 .env-flap-inner { position:absolute; inset:0; background:linear-gradient(155deg,#c9b070 0%,#b89850 100%); clip-path:polygon(0 0,50% 74%,100% 0); backface-visibility:hidden; }
 

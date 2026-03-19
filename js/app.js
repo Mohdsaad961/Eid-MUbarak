@@ -330,15 +330,61 @@
   if (replayBackdrop) replayBackdrop.addEventListener('click', closeReplay);
   if (replayPanel) replayPanel.addEventListener('keydown', e => { if (e.key==='Escape') closeReplay(); });
 
-  /* ── Celebrate ──────────────────────────────── */
-  window.celebrate = function (btn) {
+  /* ═══════════════════════════════════════════════════
+     EMAIL NOTIFICATION — Web3Forms (free, no backend)
+     SETUP IN 60 SECONDS:
+       1. Go to https://web3forms.com
+       2. Enter: mohasaadraza961@gmail.com
+       3. Copy the access key they give you
+       4. Paste it below replacing YOUR_WEB3FORMS_KEY_HERE
+  ═══════════════════════════════════════════════════ */
+  const WEB3FORMS_KEY = 'YOUR_WEB3FORMS_KEY_HERE';
+  let   notifyCount   = 0;
+
+  async function sendEmailNotification() {
+    if (!WEB3FORMS_KEY || WEB3FORMS_KEY === '45eebc4d-2ce6-4ae8-80a8-1cedf191443c') return;
+    try {
+      notifyCount++;
+      await fetch('https://api.web3forms.com/submit', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_KEY,
+          subject:    '\uD83C\uDF19 Eid Blessing Button Clicked!',
+          from_name:  'Eid Mubarak Website',
+          message:
+            'Someone just clicked the "Send Eid Blessings" button on your website!\n\n' +
+            'Time    : ' + new Date().toLocaleString('en-PK', { timeZone: 'Asia/Karachi' }) + '\n' +
+            'Click # : ' + notifyCount + '\n' +
+            'Device  : ' + (isMobile ? 'Mobile' : 'Desktop') + '\n' +
+            'Browser : ' + navigator.userAgent.slice(0, 100),
+        }),
+      });
+    } catch (e) { /* silent — never interrupt user */ }
+  }
+
+  /* ── Celebrate button — mobile-touch safe ───── */
+  function runCelebrate(btn) {
     const r = btn.getBoundingClientRect();
-    burst(r.left+r.width/2, r.top+r.height/2, isMobile?40:110, 380, true);
-    if (typeof window.spawnLanternBurst === 'function') window.spawnLanternBurst(isMobile?6:16);
+    burst(r.left + r.width / 2, r.top + r.height / 2, isMobile ? 40 : 110, 380, true);
+    if (typeof window.spawnLanternBurst === 'function') window.spawnLanternBurst(isMobile ? 6 : 16);
     if (typeof window.playEidBlessingSound === 'function') window.playEidBlessingSound();
     btn.classList.add('btn-bounce');
     setTimeout(() => btn.classList.remove('btn-bounce'), 600);
-  };
+    sendEmailNotification();
+  }
+  window.celebrate = runCelebrate; /* keep onclick= working */
+
+  /* Wire button directly — fixes Android/iOS tap not firing */
+  const celebBtn = document.getElementById('celebrate-btn');
+  if (celebBtn) {
+    celebBtn.removeAttribute('onclick'); /* prevent double-fire */
+    celebBtn.addEventListener('click', () => runCelebrate(celebBtn));
+    celebBtn.addEventListener('touchend', (e) => {
+      e.preventDefault(); /* stops ghost click delay on mobile */
+      runCelebrate(celebBtn);
+    }, { passive: false });
+  }
 
   /* ── Audio UI ───────────────────────────────── */
   function setAudioUI(on) {
