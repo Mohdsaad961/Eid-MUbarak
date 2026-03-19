@@ -775,7 +775,6 @@ body {
 /* GPU-accelerate key animated elements */
 #envelope,
 .env-flap,
-.env-seal,
 .seq-screen,
 .replay-overlay-panel,
 .replay-content,
@@ -787,6 +786,8 @@ body {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
+/* Seal uses translate(-50%,-44%) for positioning — only hint, don't override */
+.env-seal { will-change: opacity, transform; }
 
 /* Reduce box-shadow layers on mobile */
 @media (max-width: 768px) {
