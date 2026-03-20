@@ -1,204 +1,225 @@
 /* ══════════════════════════════════════════
-   audio.js — Web Audio API sound engine
+   audio.js — Clean Web Audio Engine
    Mohammad Saad Raza · 1447 AH / 2026
+   ─────────────────────────────────────────
+   ROOT FIX: Removed createConvolver() with
+   white-noise buffer — that was the "grrr".
+   Replaced with a clean delay-echo chain.
+   All oscillators now sine/triangle only.
 ══════════════════════════════════════════ */
 (function () {
   'use strict';
 
   let AC = null, masterGain = null, fadeGain = null;
+  let delayNode = null, delayFeedback = null, delayWet = null;
+
   window.bgPlaying = false;
   let bgTimer = null;
-  const active = [];                        // track oscillators for clean stop
+  const active = [];
 
-  /* ── AudioContext (lazy init) ────────── */
+  /* ── AudioContext (lazy, user-gesture safe) ── */
   function getAC() {
     if (!AC) {
       AC = new (window.AudioContext || window.webkitAudioContext)();
 
-      fadeGain = AC.createGain();
-      fadeGain.gain.value = 1;
-      fadeGain.connect(AC.destination);
+      fadeGain   = AC.createGain(); fadeGain.gain.value   = 1;
+      masterGain = AC.createGain(); masterGain.gain.value = 0.65;
 
-      masterGain = AC.createGain();
-      masterGain.gain.value = .70;
+      /* Clean delay-echo — NO convolver, NO white noise, NO grrr */
+      delayNode     = AC.createDelay(2.0);
+      delayFeedback = AC.createGain();
+      delayWet      = AC.createGain();
+      delayNode.delayTime.value = 0.28;
+      delayFeedback.gain.value  = 0.20;
+      delayWet.gain.value       = 0.16;
+
+      delayNode.connect(delayFeedback);
+      delayFeedback.connect(delayNode);
+      delayNode.connect(delayWet);
+      delayWet.connect(masterGain);
+
       masterGain.connect(fadeGain);
-
-      /* Lightweight reverb */
-      const revLen = AC.sampleRate * 2.2;
-      const revBuf = AC.createBuffer(2, revLen, AC.sampleRate);
-      for (let ch = 0; ch < 2; ch++) {
-        const d = revBuf.getChannelData(ch);
-        for (let i = 0; i < revLen; i++)
-          d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (AC.sampleRate * .75));
-      }
-      const rev = AC.createConvolver();
-      rev.buffer = revBuf;
-      const revGain = AC.createGain();
-      revGain.gain.value = .26;
-      rev.connect(revGain);
-      revGain.connect(masterGain);
-      AC._rev = rev;
+      fadeGain.connect(AC.destination);
     }
     if (AC.state === 'suspended') AC.resume();
     return AC;
   }
 
-  function track(osc, stop) {
-    active.push(osc);
-    setTimeout(() => {
-      const i = active.indexOf(osc);
-      if (i !== -1) active.splice(i, 1);
-    }, Math.max(0, (stop - (AC?.currentTime ?? 0)) * 1000 + 500));
+  /* Route: dry master + echo delay */
+  function wire(node) {
+    node.connect(masterGain);
+    node.connect(delayNode);
   }
 
-  /* ── Primitives ──────────────────────── */
+  function track(osc, stopAt) {
+    active.push(osc);
+    const ms = Math.max(100, (stopAt - (AC?.currentTime ?? 0)) * 1000 + 600);
+    setTimeout(() => {
+      const idx = active.indexOf(osc);
+      if (idx !== -1) active.splice(idx, 1);
+    }, ms);
+  }
+
+  /* ── Primitives: SINE ONLY — zero buzz ── */
+
   function pluck(freq, t, vol, dur) {
-    const ac = getAC();
-    const o1 = ac.createOscillator(), o2 = ac.createOscillator();
-    const env = ac.createGain(), flt = ac.createBiquadFilter();
-    o1.type = 'sawtooth'; o1.frequency.value = freq;
-    o2.type = 'triangle'; o2.frequency.value = freq * 2.003;
-    flt.type = 'lowpass';
-    flt.frequency.setValueAtTime(freq * 12, t);
-    flt.frequency.exponentialRampToValueAtTime(freq * 2.5, t + dur * .5);
-    flt.Q.value = 1.8;
+    const ac = getAC(), osc = ac.createOscillator(), env = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.996, t + dur);
     env.gain.setValueAtTime(0, t);
-    env.gain.linearRampToValueAtTime(vol, t + .008);
-    env.gain.setValueAtTime(vol * .85, t + .04);
-    env.gain.exponentialRampToValueAtTime(vol * .001, t + dur);
-    o1.connect(flt); o2.connect(flt); flt.connect(env);
-    env.connect(masterGain); env.connect(ac._rev);
-    const s = t + dur + .05;
-    o1.start(t); o1.stop(s); track(o1, s);
-    o2.start(t); o2.stop(s); track(o2, s);
+    env.gain.linearRampToValueAtTime(vol, t + 0.007);
+    env.gain.setValueAtTime(vol * 0.75, t + 0.05);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(env); wire(env);
+    const s = t + dur + 0.08; osc.start(t); osc.stop(s); track(osc, s);
   }
 
   function bell(freq, t, vol, dur) {
     const ac = getAC();
-    [[1,vol],[2.756,vol*.44],[5.404,vol*.19]].forEach(([ratio, v]) => {
-      const osc = ac.createOscillator(), g = ac.createGain();
-      osc.type = 'sine'; osc.frequency.value = freq * ratio;
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(v, t + .01);
-      g.gain.exponentialRampToValueAtTime(v * .001, t + dur * (ratio === 1 ? 1 : .55));
-      osc.connect(g); g.connect(masterGain); g.connect(ac._rev);
-      const s = t + dur + .05;
-      osc.start(t); osc.stop(s); track(osc, s);
+    [[1, vol], [2.75, vol * 0.26]].forEach(([r, v]) => {
+      const osc = ac.createOscillator(), env = ac.createGain();
+      osc.type = 'sine'; osc.frequency.value = freq * r;
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(v, t + 0.01);
+      env.gain.exponentialRampToValueAtTime(0.0001, t + dur * (r === 1 ? 1 : 0.48));
+      osc.connect(env); wire(env);
+      const s = t + dur + 0.05; osc.start(t); osc.stop(s); track(osc, s);
     });
   }
 
   function pad(freqs, t, vol, dur) {
     const ac = getAC();
     freqs.forEach((freq, i) => {
-      const osc = ac.createOscillator(), env = ac.createGain(), flt = ac.createBiquadFilter();
+      const osc = ac.createOscillator(), env = ac.createGain();
       osc.type = 'sine'; osc.frequency.value = freq;
-      flt.type = 'lowpass'; flt.frequency.value = freq * 4;
-      env.gain.setValueAtTime(0, t + i * .06);
-      env.gain.linearRampToValueAtTime(vol, t + i * .06 + .3);
-      env.gain.setValueAtTime(vol, t + dur - .4);
+      const st = t + i * 0.08;
+      env.gain.setValueAtTime(0, st);
+      env.gain.linearRampToValueAtTime(vol, st + 0.5);
+      env.gain.setValueAtTime(vol, t + dur - 0.5);
       env.gain.linearRampToValueAtTime(0, t + dur);
-      osc.connect(flt); flt.connect(env);
-      env.connect(masterGain); env.connect(ac._rev);
-      const s = t + dur + .1;
-      osc.start(t + i * .06); osc.stop(s); track(osc, s);
+      osc.connect(env); wire(env);
+      const s = t + dur + 0.12; osc.start(st); osc.stop(s); track(osc, s);
     });
   }
 
   function bass(freq, t, vol, dur) {
-    const ac = getAC();
-    const osc = ac.createOscillator(), env = ac.createGain(), flt = ac.createBiquadFilter();
-    osc.type = 'triangle'; osc.frequency.value = freq;
-    flt.type = 'lowpass'; flt.frequency.value = 280;
+    const ac = getAC(), osc = ac.createOscillator(), env = ac.createGain();
+    osc.type = 'sine'; osc.frequency.value = freq;
     env.gain.setValueAtTime(0, t);
-    env.gain.linearRampToValueAtTime(vol, t + .08);
-    env.gain.setValueAtTime(vol * .7, t + dur * .5);
-    env.gain.exponentialRampToValueAtTime(.001, t + dur);
-    osc.connect(flt); flt.connect(env); env.connect(masterGain);
-    const s = t + dur + .05;
-    osc.start(t); osc.stop(s); track(osc, s);
+    env.gain.linearRampToValueAtTime(vol, t + 0.12);
+    env.gain.setValueAtTime(vol * 0.65, t + dur * 0.5);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(env); env.connect(masterGain); /* bass: dry only */
+    const s = t + dur + 0.05; osc.start(t); osc.stop(s); track(osc, s);
+  }
+
+  function shimmer(freq, t, vol, dur) {
+    const ac = getAC(), osc = ac.createOscillator(), env = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.38, t + dur * 0.65);
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(vol, t + 0.1);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(env); wire(env);
+    const s = t + dur + 0.05; osc.start(t); osc.stop(s); track(osc, s);
   }
 
   /* ══════════════════════════════════════
      SOUND 1 — Envelope open
+     ~11s long: bridges Bismillah (2s) AND
+     Eid Mubarak (~9s) screens seamlessly
   ══════════════════════════════════════ */
   window.playEnvelopeOpenSound = function () {
-    const ac = getAC(), now = ac.currentTime;
+    const ac = getAC(), t = ac.currentTime;
 
-    /* Rising whoosh */
-    const wOsc = ac.createOscillator(), wEnv = ac.createGain(), wFlt = ac.createBiquadFilter();
-    wOsc.type = 'sawtooth';
-    wOsc.frequency.setValueAtTime(55, now);
-    wOsc.frequency.exponentialRampToValueAtTime(1200, now + 1.1);
-    wFlt.type = 'bandpass';
-    wFlt.frequency.setValueAtTime(200, now);
-    wFlt.frequency.exponentialRampToValueAtTime(4000, now + 1.1);
-    wFlt.Q.value = 1.2;
-    wEnv.gain.setValueAtTime(0, now);
-    wEnv.gain.linearRampToValueAtTime(.12, now + .06);
-    wEnv.gain.exponentialRampToValueAtTime(.001, now + 1.2);
-    wOsc.connect(wFlt); wFlt.connect(wEnv); wEnv.connect(masterGain);
-    wOsc.start(now); wOsc.stop(now + 1.3);
+    /* Phase 1 (0–2s): Bismillah screen — soft gentle reveal */
+    shimmer(220, t + 0.00, 0.042, 1.8);
+    shimmer(330, t + 0.15, 0.038, 1.6);
+    shimmer(440, t + 0.30, 0.035, 1.4);
+    shimmer(550, t + 0.45, 0.030, 1.2);
+    pad([110, 146.83, 185, 220], t + 0.1, 0.030, 2.2);
+    bass(73.42, t + 0.5, 0.13, 1.5);
+    [293.66, 369.99, 440].forEach((f, i) =>
+      bell(f, t + 0.35 + i * 0.18, 0.085, 2.0));
 
-    /* Cascading bells */
-    [293.66,369.99,440,587.33,739.99,880,1174.66,1479.98].forEach((f,i) =>
-      bell(f, now + .15 + i * .11, .13 - i * .008, 2.5 - i * .15));
+    /* Phase 2 (2–5s): Screen transition — rising warmth */
+    pad([146.83, 220, 293.66, 369.99], t + 2.2, 0.036, 3.0);
+    [440, 587.33, 739.99].forEach((f, i) =>
+      bell(f, t + 2.5 + i * 0.22, 0.090, 2.4));
+    bass(73.42, t + 2.4, 0.11, 2.0);
 
-    pad([146.83,185,220,293.66], now + .6, .055, 3.5);
-    bass(73.42, now + .55, .22, 1.2);
+    /* Phase 3 (5–10s): Eid Mubarak screen — golden swell */
+    pad([185, 246.94, 293.66, 440], t + 5.2, 0.038, 4.6);
+    [587.33, 739.99, 880, 1046.5, 1174.66].forEach((f, i) =>
+      bell(f, t + 5.6 + i * 0.26, 0.080 - i * 0.008, 2.8));
+    shimmer(440, t + 6.0, 0.032, 2.5);
+    shimmer(880, t + 7.2, 0.026, 2.0);
+    bass(73.42, t + 5.4, 0.09, 3.5);
+
+    /* Phase 4 (9–11s): Sparkle tail, fades as bg music crossfades in */
+    [1046.5, 1174.66, 1318.5, 1568].forEach((f, i) =>
+      bell(f, t + 9.0 + i * 0.18, 0.050, 1.8));
+    pad([220, 293.66, 440], t + 9.5, 0.018, 2.2);
   };
 
   /* ══════════════════════════════════════
-     SOUND 2 — Blessing button
+     SOUND 2 — Celebrate / Blessing button
   ══════════════════════════════════════ */
   window.playEidBlessingSound = function () {
-    const ac = getAC(), now = ac.currentTime;
-    [392,440,493.88,587.33,659.25,783.99,880,1046.5,1174.66].forEach((f,i) =>
-      bell(f, now + i * .07, .13 - i * .008, 2.8 - i * .18));
-    pad([196,246.94,293.66,392,493.88], now + .5, .065, 3.0);
-    [[783.99,.55,.5,.10],[880,.7,.5,.10],[1046.5,.85,.7,.12],
-     [880,1.3,.4,.09],[783.99,1.6,.4,.09],[659.25,1.9,1.0,.11]]
-      .forEach(([f,dt,dur,v]) => pluck(f, now + dt, v, dur));
-    bass(98, now + .5, .20, 1.0);
-    [1568,1760,2093,1568].forEach((f,i) => bell(f, now + 2.0 + i * .09, .07, 1.2));
+    const ac = getAC(), t = ac.currentTime;
+    [392, 440, 493.88, 587.33, 659.25, 783.99, 880, 1046.5].forEach((f, i) =>
+      bell(f, t + i * 0.07, 0.10 - i * 0.008, 2.5 - i * 0.17));
+    pad([196, 246.94, 293.66, 392, 493.88], t + 0.4, 0.044, 3.0);
+    [[783.99, 0.5, 0.5, 0.08], [880, 0.7, 0.5, 0.08],
+     [1046.5, 0.9, 0.6, 0.09], [880, 1.4, 0.4, 0.07],
+     [659.25, 1.8, 1.0, 0.08]]
+      .forEach(([f, dt, dur, v]) => pluck(f, t + dt, v, dur));
+    bass(98, t + 0.5, 0.14, 1.0);
+    [1568, 1760, 2093].forEach((f, i) =>
+      bell(f, t + 2.0 + i * 0.1, 0.055, 1.2));
   };
 
   /* ══════════════════════════════════════
-     BACKGROUND MUSIC
+     BACKGROUND MUSIC — gentle ambient loop
   ══════════════════════════════════════ */
   const MELODY = [
-    [293.66,0.0,0.9,.095,'pl'],[369.99,0.9,0.6,.085,'pl'],
-    [440,1.5,0.7,.09,'pl'],[587.33,2.2,1.1,.1,'pl'],
-    [493.88,3.3,0.7,.085,'pl'],[440,4.1,0.6,.085,'pl'],
-    [369.99,4.7,0.5,.08,'pl'],[329.63,5.2,0.5,.075,'pl'],
-    [293.66,5.7,1.3,.095,'pl'],[587.33,7.2,0.5,.08,'be'],
-    [739.99,7.7,0.5,.08,'be'],[880,8.2,0.9,.085,'be'],
-    [739.99,9.1,0.5,.075,'be'],[587.33,9.6,0.5,.075,'be'],
-    [493.88,10.1,0.6,.07,'pl'],[440,10.7,1.4,.09,'pl'],
-    [369.99,12.2,0.4,.07,'be'],[440,12.6,0.4,.075,'be'],
-    [587.33,13.0,0.5,.08,'be'],[739.99,13.5,0.6,.085,'be'],
-    [880,14.1,1.6,.09,'be'],[587.33,15.8,0.5,.07,'pl'],
-    [440,16.3,0.5,.065,'pl'],[293.66,16.8,2.2,.09,'pl'],
+    [293.66, 0.0,  0.9,  0.075, 'pl'], [369.99, 0.9,  0.6,  0.070, 'pl'],
+    [440,    1.5,  0.7,  0.072, 'pl'], [587.33, 2.2,  1.1,  0.076, 'pl'],
+    [493.88, 3.3,  0.7,  0.070, 'pl'], [440,    4.1,  0.6,  0.070, 'pl'],
+    [369.99, 4.7,  0.5,  0.065, 'pl'], [329.63, 5.2,  0.5,  0.062, 'pl'],
+    [293.66, 5.7,  1.3,  0.075, 'pl'], [587.33, 7.2,  0.5,  0.066, 'be'],
+    [739.99, 7.7,  0.5,  0.066, 'be'], [880,    8.2,  0.9,  0.070, 'be'],
+    [739.99, 9.1,  0.5,  0.062, 'be'], [587.33, 9.6,  0.5,  0.062, 'be'],
+    [493.88, 10.1, 0.6,  0.058, 'pl'], [440,    10.7, 1.4,  0.072, 'pl'],
+    [369.99, 12.2, 0.4,  0.058, 'be'], [440,    12.6, 0.4,  0.062, 'be'],
+    [587.33, 13.0, 0.5,  0.066, 'be'], [739.99, 13.5, 0.6,  0.070, 'be'],
+    [880,    14.1, 1.6,  0.072, 'be'], [587.33, 15.8, 0.5,  0.058, 'pl'],
+    [440,    16.3, 0.5,  0.052, 'pl'], [293.66, 16.8, 2.2,  0.072, 'pl'],
   ];
   const BASS_LINE = [
-    [73.42,0.0,2.2,.14],[73.42,4.1,2.0,.13],
-    [82.41,7.2,2.8,.12],[73.42,12.2,2.5,.14],[73.42,16.8,2.2,.13],
+    [73.42, 0.0,  2.2, 0.11], [73.42, 4.1,  2.0, 0.10],
+    [82.41, 7.2,  2.8, 0.09], [73.42, 12.2, 2.5, 0.11],
+    [73.42, 16.8, 2.2, 0.10],
   ];
   const PAD_CHORDS = [
-    [[146.83,185,220,293.66],0.0,4.0,.038],
-    [[146.83,185,220,293.66],4.1,3.0,.035],
-    [[164.81,207.65,246.94,329.63],7.2,5.0,.035],
-    [[146.83,185,220,293.66],12.2,3.5,.038],
-    [[146.83,185,220,293.66],16.8,2.5,.038],
+    [[146.83, 185, 220, 293.66],       0.0,  4.0, 0.028],
+    [[146.83, 185, 220, 293.66],       4.1,  3.0, 0.026],
+    [[164.81, 207.65, 246.94, 329.63], 7.2,  5.0, 0.026],
+    [[146.83, 185, 220, 293.66],       12.2, 3.5, 0.028],
+    [[146.83, 185, 220, 293.66],       16.8, 2.5, 0.028],
   ];
   const LOOP_DUR = 20.5;
 
   function scheduleBgLoop(startTime) {
     if (!window.bgPlaying) return;
-    const ac = getAC(), now = startTime || ac.currentTime;
-    MELODY.forEach(([f,dt,dur,v,type]) =>
-      type === 'be' ? bell(f, now+dt, v, dur+.4) : pluck(f, now+dt, v, dur+.2));
-    BASS_LINE.forEach(([f,dt,dur,v])        => bass(f, now+dt, v, dur));
-    PAD_CHORDS.forEach(([freqs,dt,dur,v])   => pad(freqs, now+dt, v, dur));
+    const ac  = getAC();
+    const now = startTime || ac.currentTime;
+    MELODY.forEach(([f, dt, dur, v, type]) =>
+      type === 'be' ? bell(f, now+dt, v, dur+0.4) : pluck(f, now+dt, v, dur+0.2));
+    BASS_LINE.forEach(([f, dt, dur, v])      => bass(f, now+dt, v, dur));
+    PAD_CHORDS.forEach(([freqs, dt, dur, v]) => pad(freqs, now+dt, v, dur));
     bgTimer = setTimeout(() => scheduleBgLoop(now + LOOP_DUR), (LOOP_DUR - 1) * 1000);
   }
 
@@ -207,8 +228,8 @@
     window.bgPlaying = true;
     getAC();
     fadeGain.gain.cancelScheduledValues(AC.currentTime);
-    fadeGain.gain.setValueAtTime(0, AC.currentTime);
-    fadeGain.gain.linearRampToValueAtTime(1, AC.currentTime + 1.5);
+    fadeGain.gain.setValueAtTime(0.0, AC.currentTime);
+    fadeGain.gain.linearRampToValueAtTime(1, AC.currentTime + 2.2);
     scheduleBgLoop();
   };
 
@@ -219,7 +240,7 @@
     const now = AC.currentTime;
     fadeGain.gain.cancelScheduledValues(now);
     fadeGain.gain.setValueAtTime(fadeGain.gain.value, now);
-    fadeGain.gain.linearRampToValueAtTime(0, now + 1.2);
+    fadeGain.gain.linearRampToValueAtTime(0, now + 1.5);
     setTimeout(() => {
       active.forEach(o => { try { o.stop(); } catch (_) {} });
       active.length = 0;
@@ -227,7 +248,7 @@
         fadeGain.gain.cancelScheduledValues(AC.currentTime);
         fadeGain.gain.setValueAtTime(1, AC.currentTime);
       }
-    }, 1300);
+    }, 1600);
   };
 
 })();

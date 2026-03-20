@@ -211,17 +211,26 @@
     const ex   = rect.left + rect.width / 2;
     const ey   = rect.top  + rect.height / 2;
 
+    /* Sound fires FIRST — plays continuously through Bismillah + Eid Mubarak */
     window.playEnvelopeOpenSound?.();
-    dot('dot-1', 'active');
-    fadeIn(screenBism);
-    hideEl(hint);
-    hideEl(preGreet);
+
+    /* Shake envelope first */
     envelope.classList.add('envelope-shake');
 
     setTimeout(() => {
       envelope.classList.remove('envelope-shake');
       envelope.classList.add('opening');
       glowRings(ex, ey);
+
+      /* Show Bismillah screen — both text & translation animate in together */
+      dot('dot-1', 'active');
+      screenBism.style.display = 'flex';
+      /* Small RAF delay so display:flex is painted before animation class */
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => screenBism.classList.add('bism-animate'))
+      );
+      hideEl(hint);
+      hideEl(preGreet);
     }, 600);
 
     setTimeout(() => {
@@ -229,15 +238,15 @@
       spawnLanternBurst(6);
     }, 700);
 
-    setTimeout(() => burst(ex, ey - 25, 42, 175, false), 1600);
+    setTimeout(() => burst(ex, ey - 25, 42, 175, false), 1400);
 
-    setTimeout(() => bismEn?.classList.add('bism-en-revealed'), 3500);
-
+    /* ── Bismillah = 2 seconds, then straight into Eid Mubarak ── */
     setTimeout(() => {
       dot('dot-1', 'done');
       dot('dot-2', 'active');
 
       fadeOut(screenBism, () => {
+        screenBism.classList.remove('bism-animate'); /* reset for potential replay */
         dot('dot-3', 'done');
         dot('dot-4', 'active');
         fadeIn(screenEid);
@@ -248,53 +257,59 @@
 
         if (eidArabic) {
           eidArabic.classList.add('golden-phase');
-          setTimeout(() => { eidArabic.classList.remove('golden-phase'); }, 1200);
+          setTimeout(() => eidArabic.classList.remove('golden-phase'), 1400);
         }
 
         if (eidEnglish) revealChars(eidEnglish, .3, .09);
 
         setTimeout(() => {
           eidDua?.classList.add('revealed');
-          setTimeout(() => eidDuaEn?.classList.add('revealed'), 300);
-        }, 1300);
+          setTimeout(() => eidDuaEn?.classList.add('revealed'), 350);
+        }, 1200);
 
-        setTimeout(() => shimmerSweep(eidContent), 2000);
+        setTimeout(() => shimmerSweep(eidContent), 1800);
       });
-    }, 4500);
+    }, 2000);
 
+    /* ── Eid Mubarak shows for ~5s (2000 + 5500 = 7500ms total) ── */
     setTimeout(() => {
       dot('dot-2', 'done');
       dot('dot-4', 'done');
 
       fadeOut(screenEid, () => {
+        /* ── Setup envelope on Home for replay (no flash of home page) ── */
         envelope.classList.add('done', 'done-clickable');
         if (envContainer) envContainer.style.pointerEvents = '';
-
-        if (replayHint) {
-          replayHint.style.display = 'flex';
-          replayHint.style.opacity = '0';
-          void replayHint.offsetHeight;
-          replayHint.style.transition = 'opacity 1s ease';
-          replayHint.style.opacity = '1';
-        }
-
+        /* Register replay on envelope (visible when user navigates back to Home) */
         envelope.addEventListener('click', openReplay);
         replayHint?.addEventListener('click', openReplay);
 
+        /* Reveal the golden card on Home so it looks great when user comes back */
         if (postReveal) {
           postReveal.removeAttribute('aria-hidden');
           requestAnimationFrame(() =>
             requestAnimationFrame(() => postReveal.classList.add('visible'))
           );
         }
+        /* Show replay hint */
+        if (replayHint) {
+          replayHint.style.display = 'flex';
+          replayHint.style.opacity = '0';
+          void replayHint.offsetHeight;
+          replayHint.style.transition = 'opacity 1s ease 0.4s';
+          replayHint.style.opacity = '1';
+        }
 
+        /* Unlock nav + go DIRECTLY to Blessings — no home flash */
         unlockNav();
         showSection('blessings');
         window.startBgMusic?.();
 
-        setTimeout(() => burst(window.innerWidth / 2, window.innerHeight * .38, 75, 320, true), 450);
+        /* Celebration burst on blessings page */
+        setTimeout(() => burst(window.innerWidth / 2, window.innerHeight * .35, 80, 340, true), 300);
+        setTimeout(() => spawnLanternBurst(8), 400);
       });
-    }, 8800);
+    }, 7500);
   }
 
   function onEnvKey(e) {
